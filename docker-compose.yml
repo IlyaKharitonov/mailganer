@@ -1,0 +1,53 @@
+version: '3.3'
+
+services:
+
+  db:
+    image: postgres:14.5
+    container_name: postgresmailganer
+    restart: always
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=mailganernetwork
+    volumes:
+      #            - ./scripts/initPg/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+      - ./scripts/initPg/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - mailganernetwork
+
+  redis:
+    image: redis:7.0.4
+    restart: always
+    container_name: redismailganer
+    #        command: ["redis-server", "--bind", "redis", "--port", "6379"]
+    ports:
+      - "6379:6379"
+    networks:
+      - mailganernetwork
+
+  server:
+    build: .
+    #            context: .
+    #        command:
+    #            - ./mailganer
+    #            context: .
+    restart: always
+    depends_on:
+      - db
+      - redis
+    command: "./mailganer"
+    ports:
+      - "5000:5000"
+    networks:
+      - mailganernetwork
+
+networks:
+  mailganernetwork:
+    driver: bridge
+
+
+
+
