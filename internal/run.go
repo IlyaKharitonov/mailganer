@@ -6,40 +6,37 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gocelery/gocelery"
+	gomail "gopkg.in/mail.v2"
 
+	"mailganer/infrastructure/celery"
 	"mailganer/internal/entities"
 	"mailganer/internal/handlers"
-	"mailganer/internal/services/letterService"
-	"mailganer/internal/services/subscriberService"
+	//"mailganer/internal/services/letterService"
+	//"mailganer/internal/services/subscriberService"
 )
 
 func Run(config *entities.Config) error{
 	ctx := context.Background()
-	//подключения к постгрессу, редису или рэббиту
+	//подключение к постгрессу
 	postgres, err := config.Postgres.ConnectPostgres(ctx)
 	if err != nil {
 		return fmt.Errorf("internal.Run() #1; Error: %s", err.Error())
 	}
 	log.Println("connected to pg")
 
-	redisPool := config.Redis.CreatePool()
-	log.Println("connected to redis")
-
-	celery, err := gocelery.NewCeleryClient(
-		gocelery.New)
-
-	celery, err := gocelery.NewCeleryClient(
-		gocelery.NewRedisBroker(redisPool),
-		&gocelery.RedisCeleryBackend{Pool: redisPool},
-		1,
-	)
+	//подкл к celery
+	celery, err := celery.Connect(config)
 	if err != nil {
 		return fmt.Errorf("internal.Run() #3; Error: %s", err.Error())
 	}
 	log.Println("connected to celery")
 
-	err := handlers.RegisterHandlers(postgres, redis, celery)
+	//подключение к smtp серверу
+	dialer := gomail.NewDialer(config.Smtp.Host, config.Smtp.Port, config.Smtp.Login, config.Smtp.Password)
+	log.Println("connected to smtp")
+
+	//регистрация хэндлеров и воркеров
+	err = handlers.RegisterHandlers(postgres, celery, dialer, config)
 	if err != nil {
 		return fmt.Errorf("internal.Run() #4; Error: %s", err.Error())
 	}

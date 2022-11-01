@@ -10,7 +10,7 @@ type celery struct {
 	cli *gocelery.CeleryClient
 }
 
-func NewCeleryService(cli *gocelery.CeleryClient)*celery{
+func NewCeleryCliService(cli *gocelery.CeleryClient)*celery{
 	return &celery{cli}
 }
 

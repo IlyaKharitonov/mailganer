@@ -1,4 +1,4 @@
-package letterService
+package celeryWorkerService
 
 import (
 	"context"
@@ -36,8 +36,3 @@ func (p *postgres)AddTemplate(ctx context.Context, template string) error{
 	return nil
 }
 
-//MarkAsRead отмечает прочитанное письмо
-func (p *postgres)MarkAsRead(id uint)error{
-
-	return nil
-}
